@@ -1,5 +1,6 @@
 package com.metaphorce.TaskFlow.service;
 
+import com.metaphorce.TaskFlow.exception.RecursoNoEncontradoException;
 import com.metaphorce.TaskFlow.enums.Estatus;
 import com.metaphorce.TaskFlow.enums.Prioridad;
 import com.metaphorce.TaskFlow.modelo.Tareas;
@@ -34,15 +35,19 @@ public class TareasServiceImpl implements TareasService {
 
     @Override
     public Tareas updateTarea(Integer id, Tareas tarea) {
-        if (tareasRepository.existsById(id)) {
+        // Buscamos la tarea por ID y si no existe, lanzamos la excepción
+        return tareasRepository.findById(id).map(tareaExistente -> {
             tarea.setIdTarea(id);
             return tareasRepository.save(tarea);
-        }
-        return null;
+        }).orElseThrow(() -> new RecursoNoEncontradoException("Tarea no encontrada con el ID: " + id));
     }
 
     @Override
     public void deleteTarea(Integer id) {
+        // Verificamos la existencia antes de eliminar
+        if (!tareasRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("Tarea no encontrada con el ID: " + id);
+        }
         tareasRepository.deleteById(id);
     }
 

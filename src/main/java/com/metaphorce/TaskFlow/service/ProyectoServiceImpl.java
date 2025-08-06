@@ -1,5 +1,6 @@
 package com.metaphorce.TaskFlow.service;
 
+import com.metaphorce.TaskFlow.exception.RecursoNoEncontradoException;
 import com.metaphorce.TaskFlow.modelo.Proyecto;
 import com.metaphorce.TaskFlow.modelo.Usuario;
 import com.metaphorce.TaskFlow.repository.ProyectoRepository;
@@ -33,15 +34,19 @@ public class ProyectoServiceImpl implements ProyectoService {
 
     @Override
     public Proyecto updateProyecto(Integer id, Proyecto proyecto) {
-        if (proyectoRepository.existsById(id)) {
+        // En lugar de devolver null, lanzamos una excepción si el proyecto no existe
+        return proyectoRepository.findById(id).map(proyectoExistente -> {
             proyecto.setIdProyecto(id);
             return proyectoRepository.save(proyecto);
-        }
-        return null;
+        }).orElseThrow(() -> new RecursoNoEncontradoException("Proyecto no encontrado con el ID: " + id));
     }
 
     @Override
     public void deleteProyecto(Integer id) {
+        // Verificamos la existencia antes de eliminar
+        if (!proyectoRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("Proyecto no encontrado con el ID: " + id);
+        }
         proyectoRepository.deleteById(id);
     }
 

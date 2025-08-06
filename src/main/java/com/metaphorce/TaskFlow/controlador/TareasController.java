@@ -1,5 +1,6 @@
 package com.metaphorce.TaskFlow.controlador;
 
+import com.metaphorce.TaskFlow.exception.RecursoNoEncontradoException;
 import com.metaphorce.TaskFlow.enums.Estatus;
 import com.metaphorce.TaskFlow.enums.Prioridad;
 import com.metaphorce.TaskFlow.modelo.Tareas;
@@ -32,8 +33,7 @@ public class TareasController {
     @GetMapping("/{id}")
     public ResponseEntity<Tareas> getTareaById(@PathVariable Integer id) {
         Optional<Tareas> tarea = tareasService.getTareaById(id);
-        return tarea.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return ResponseEntity.ok(tarea.orElseThrow(() -> new RecursoNoEncontradoException("Tarea no encontrada con el ID: " + id)));
     }
 
     // Crear una nueva tarea
@@ -44,23 +44,20 @@ public class TareasController {
     }
 
     // Actualizar una tarea existente
-    @PutMapping("/actualizar/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<Tareas> updateTarea(@PathVariable Integer id, @RequestBody Tareas tarea) {
+        // La excepción se lanzará en el servicio si la tarea no existe
         Tareas updatedTarea = tareasService.updateTarea(id, tarea);
-        if (updatedTarea != null) {
-            return new ResponseEntity<>(updatedTarea, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(updatedTarea, HttpStatus.OK);
     }
 
     // Eliminar una tarea por su ID
-    @DeleteMapping("/elimniar/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteTarea(@PathVariable Integer id) {
         tareasService.deleteTarea(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    // Métodos personalizados
     // Obtener tareas por el creador
     @GetMapping("/creador/{idUsuario}")
     public ResponseEntity<List<Tareas>> getTareasByCreador(@PathVariable Integer idUsuario) {

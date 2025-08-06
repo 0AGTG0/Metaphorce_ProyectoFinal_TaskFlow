@@ -10,9 +10,11 @@ public interface UsuarioService {
     Optional<Usuario> getUsuarioById(Integer id);
     Usuario createUsuario(Usuario usuario);
     Usuario updateUsuario(Integer id, Usuario usuario);
-    void deleteUsuario(Integer id);
+    void deleteById(Integer id);
 
     Optional<Usuario> getUsuarioByCorreo(String correo);
     List<Usuario> getUsuariosByRol(Rol rol);
     Optional<Usuario> getUsuarioByNombre(String nombre);
+
+    Optional<Usuario> findById(Integer id);
 }

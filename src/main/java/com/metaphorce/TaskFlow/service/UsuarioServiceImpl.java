@@ -1,6 +1,8 @@
 package com.metaphorce.TaskFlow.service;
 
 import com.metaphorce.TaskFlow.enums.Rol;
+import com.metaphorce.TaskFlow.exception.RecursoExistenteException;
+import com.metaphorce.TaskFlow.exception.RecursoNoEncontradoException;
 import com.metaphorce.TaskFlow.modelo.Usuario;
 import com.metaphorce.TaskFlow.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,20 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    public Usuario createUsuario(Usuario usuario) {
+        // Verificar si el correo ya existe
+        Optional<Usuario> usuarioExistente = usuarioRepository.findByCorreo(usuario.getCorreo());
+        if (usuarioExistente.isPresent()) {
+            throw new RecursoExistenteException("El correo electrónico ya se encuentra registrado.");
+        }
+
+        // Hashear la contraseña antes de guardarla
+        String contraseniaHash = passwordEncoder.encode(usuario.getContraseniaHash());
+        usuario.setContraseniaHash(contraseniaHash);
+
+        return usuarioRepository.save(usuario);
+    }
+
     @Override
     public List<Usuario> getAllUsuarios() {
         return usuarioRepository.findAll();
@@ -30,22 +46,20 @@ public class UsuarioServiceImpl implements UsuarioService {
     }
 
     @Override
-    public Usuario createUsuario(Usuario usuario) {
-        usuario.setContraseniaHash(passwordEncoder.encode(usuario.getContraseniaHash()));
-        return usuarioRepository.save(usuario);
-    }
-
-    @Override
     public Usuario updateUsuario(Integer id, Usuario usuario) {
-        if (usuarioRepository.existsById(id)) {
+        // Buscamos el usuario y si no existe, lanzamos la excepción
+        return usuarioRepository.findById(id).map(usuarioExistente -> {
             usuario.setIdUsuario(id);
             return usuarioRepository.save(usuario);
-        }
-        return null;
+        }).orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado con el ID: " + id));
     }
 
     @Override
-    public void deleteUsuario(Integer id) {
+    public void deleteById(Integer id) {
+        // Verificamos si el usuario existe antes de intentar eliminarlo
+        if (!usuarioRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("Usuario no encontrado con el ID: " + id);
+        }
         usuarioRepository.deleteById(id);
     }
 
@@ -62,5 +76,10 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     public Optional<Usuario> getUsuarioByNombre(String nombre) {
         return usuarioRepository.findByNombre(nombre);
+    }
+
+    @Override
+    public Optional<Usuario> findById(Integer id) {
+        return usuarioRepository.findById(id);
     }
 }

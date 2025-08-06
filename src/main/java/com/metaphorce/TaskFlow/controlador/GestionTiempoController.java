@@ -1,5 +1,6 @@
 package com.metaphorce.TaskFlow.controlador;
 
+import com.metaphorce.TaskFlow.exception.RecursoNoEncontradoException;
 import com.metaphorce.TaskFlow.modelo.GestionTiempo;
 import com.metaphorce.TaskFlow.service.GestionTiempoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +28,10 @@ public class GestionTiempoController {
     }
 
     // Obtener un registro de tiempo por su ID
-    @GetMapping("/buscar/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<GestionTiempo> getGestionTiempoById(@PathVariable Integer id) {
-        Optional<GestionTiempo> registro = gestionTiempoService.getGestionTiempoById(id);
-        return registro.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        Optional<GestionTiempo> gestionTiempo = gestionTiempoService.getGestionTiempoById(id);
+        return ResponseEntity.ok(gestionTiempo.orElseThrow(() -> new RecursoNoEncontradoException("Registro de gestión de tiempo no encontrado con el ID: " + id)));
     }
 
     // Crear un nuevo registro de tiempo
@@ -42,23 +42,20 @@ public class GestionTiempoController {
     }
 
     // Actualizar un registro de tiempo existente
-    @PutMapping("/actualizar/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<GestionTiempo> updateGestionTiempo(@PathVariable Integer id, @RequestBody GestionTiempo gestionTiempo) {
-        GestionTiempo updatedRegistro = gestionTiempoService.updateGestionTiempo(id, gestionTiempo);
-        if (updatedRegistro != null) {
-            return new ResponseEntity<>(updatedRegistro, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        // La excepción se lanzará en el servicio si el registro no existe
+        GestionTiempo updatedGestionTiempo = gestionTiempoService.updateGestionTiempo(id, gestionTiempo);
+        return new ResponseEntity<>(updatedGestionTiempo, HttpStatus.OK);
     }
 
     // Eliminar un registro de tiempo por su ID
-    @DeleteMapping("/eliminar/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteGestionTiempo(@PathVariable Integer id) {
         gestionTiempoService.deleteGestionTiempo(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    // Métodos personalizados
     // Obtener registros de tiempo en un determinado intervalo
     @GetMapping("/periodo")
     public ResponseEntity<List<GestionTiempo>> getGestionTiempoByPeriodo(

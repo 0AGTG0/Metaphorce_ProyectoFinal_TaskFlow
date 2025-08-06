@@ -1,5 +1,6 @@
 package com.metaphorce.TaskFlow.controlador;
 
+import com.metaphorce.TaskFlow.exception.RecursoNoEncontradoException;
 import com.metaphorce.TaskFlow.modelo.Proyecto;
 import com.metaphorce.TaskFlow.modelo.Usuario;
 import com.metaphorce.TaskFlow.service.ProyectoService;
@@ -31,8 +32,7 @@ public class ProyectoController {
     @GetMapping("/{id}")
     public ResponseEntity<Proyecto> getProyectoById(@PathVariable Integer id) {
         Optional<Proyecto> proyecto = proyectoService.getProyectoById(id);
-        return proyecto.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return ResponseEntity.ok(proyecto.orElseThrow(() -> new RecursoNoEncontradoException("Proyecto no encontrado con el ID: " + id)));
     }
 
     // Crear un nuevo proyecto
@@ -43,29 +43,24 @@ public class ProyectoController {
     }
 
     // Actualizar un proyecto existente
-    @PutMapping("/actualizar/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<Proyecto> updateProyecto(@PathVariable Integer id, @RequestBody Proyecto proyecto) {
         Proyecto updatedProyecto = proyectoService.updateProyecto(id, proyecto);
-        if (updatedProyecto != null) {
-            return new ResponseEntity<>(updatedProyecto, HttpStatus.OK);
-        }
-        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        return new ResponseEntity<>(updatedProyecto, HttpStatus.OK);
     }
 
     // Eliminar un proyecto por su ID
-    @DeleteMapping("/eliminar/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProyecto(@PathVariable Integer id) {
         proyectoService.deleteProyecto(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    // Métodos personalizados
     // Obtener un proyecto por su título
     @GetMapping("/titulo/{titulo}")
     public ResponseEntity<Proyecto> getProyectoByTitulo(@PathVariable String titulo) {
         Optional<Proyecto> proyecto = proyectoService.getProyectoByTitulo(titulo);
-        return proyecto.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                .orElseGet(() -> new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return ResponseEntity.ok(proyecto.orElseThrow(() -> new RecursoNoEncontradoException("Proyecto no encontrado con el título: " + titulo)));
     }
 
     // Obtener proyectos por la fecha de creación

@@ -1,5 +1,6 @@
 package com.metaphorce.TaskFlow.service;
 
+import com.metaphorce.TaskFlow.exception.RecursoNoEncontradoException;
 import com.metaphorce.TaskFlow.modelo.GestionTiempo;
 import com.metaphorce.TaskFlow.repository.GestionTiempoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,14 +33,19 @@ public class GestionTiempoServiceImpl implements GestionTiempoService {
 
     @Override
     public GestionTiempo updateGestionTiempo(Integer id, GestionTiempo gestionTiempo) {
-        if (gestionTiempoRepository.existsById(id)) {
+        // En lugar de devolver null, lanzamos una excepción si el registro no existe
+        return gestionTiempoRepository.findById(id).map(gestionExistente -> {
             gestionTiempo.setIdGestion(id);
             return gestionTiempoRepository.save(gestionTiempo);
-        }
-        return null;
+        }).orElseThrow(() -> new RecursoNoEncontradoException("Registro de gestión de tiempo no encontrado con el ID: " + id));
+    }
 
     @Override
     public void deleteGestionTiempo(Integer id) {
+        // Verificamos la existencia antes de eliminar
+        if (!gestionTiempoRepository.existsById(id)) {
+            throw new RecursoNoEncontradoException("Registro de gestión de tiempo no encontrado con el ID: " + id);
+        }
         gestionTiempoRepository.deleteById(id);
     }
 
